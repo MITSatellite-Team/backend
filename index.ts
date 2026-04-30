@@ -197,7 +197,9 @@ const server = Bun.serve({
                 console.log(body)
 
                 return new Response("Updated!", { status: 201 });
-            } catch {}
+            } catch(error) {
+                console.warn(error)
+            }
 
             return new Response("Error handling update", { status: 500 });
         },
