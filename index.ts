@@ -65,146 +65,148 @@ const getLatestUpdate = db.prepare(`
 `);
 
 const server = Bun.serve({
-  routes: {
-    "/api/status": new Response("OK"),
-    "/api/update": {
-      GET: () => {
-        const row: any = getLatestUpdate.get();
+    port: 3000,
 
-        if (!row) return new Response("No data yet", { status: 404 });
+    routes: {
+        "/api/status": new Response("OK"),
+        "/api/update": {
+        GET: () => {
+            const row: any = getLatestUpdate.get();
 
-        row.temperature0Valid = row.temperature0Valid === 1
-        row.temperature1Valid = row.temperature1Valid === 1
-        row.temperature2Valid = row.temperature2Valid === 1
-        row.temperature3Valid = row.temperature3Valid === 1
-        row.baroValid = row.baroValid === 1
-        row.imuValid = row.imuValid === 1
-        row.gpsValid = row.gpsValid === 1
+            if (!row) return new Response("No data yet", { status: 404 });
 
-        return new Response(JSON.stringify(row), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
-      },
-      POST: async req => {
-        try { 
-            const body: any = await req.json();
+            row.temperature0Valid = row.temperature0Valid === 1
+            row.temperature1Valid = row.temperature1Valid === 1
+            row.temperature2Valid = row.temperature2Valid === 1
+            row.temperature3Valid = row.temperature3Valid === 1
+            row.baroValid = row.baroValid === 1
+            row.imuValid = row.imuValid === 1
+            row.gpsValid = row.gpsValid === 1
 
-            if(typeof body !== 'object') throw new Error('Error decoding')
-
-            const timestamp: any = body.timestamp
-            if(!isFinite(timestamp)) throw new Error('Error decoding')
-
-            const gpsValid: any = body.gpsValid
-            if(typeof gpsValid !== 'boolean') throw new Error('Error decoding')
-
-            const gpsFix: any = body.gpsFix
-            if(!isFinite(gpsFix)) throw new Error('Error decoding')
-
-            const latitude: any = body.latitude
-            if(!isFinite(latitude)) throw new Error('Error decoding')
-
-            const longitude: any = body.longitude
-            if(!isFinite(longitude)) throw new Error('Error decoding')
-
-            const altitude: any = body.altitude
-            if(!isFinite(altitude)) throw new Error('Error decoding')
-
-            const temperature0Valid: any = body.temperature0Valid
-            if(typeof temperature0Valid !== 'boolean') throw new Error('Error decoding')
-
-            const temperature0: any = body.temperature0
-            if(!isFinite(temperature0)) throw new Error('Error decoding')
-
-            const temperature1Valid: any = body.temperature1Valid
-            if(typeof temperature1Valid !== 'boolean') throw new Error('Error decoding')
-
-            const temperature1: any = body.temperature1
-            if(!isFinite(temperature1)) throw new Error('Error decoding')
-
-            const temperature2Valid: any = body.temperature2Valid
-            if(typeof temperature2Valid !== 'boolean') throw new Error('Error decoding')
-
-            const temperature2: any = body.temperature2
-            if(!isFinite(temperature2)) throw new Error('Error decoding')
-
-            const temperature3Valid: any = body.temperature3Valid
-            if(typeof temperature3Valid !== 'boolean') throw new Error('Error decoding')
-
-            const temperature3: any = body.temperature3
-            if(!isFinite(temperature3)) throw new Error('Error decoding')
-
-            const baroValid: any = body.baroValid
-            if(typeof baroValid !== 'boolean') throw new Error('Error decoding')
-
-            const pressure: any = body.pressure
-            if(!isFinite(pressure)) throw new Error('Error decoding')
-
-            const humidity: any = body.humidity
-            if(!isFinite(humidity)) throw new Error('Error decoding')
-
-            const imuValid: any = body.imuValid
-            if(typeof imuValid !== 'boolean') throw new Error('Error decoding')
-
-            const ax: any = body.ax
-            if(!isFinite(ax)) throw new Error('Error decoding')
-            const ay: any = body.ay
-            if(!isFinite(ay)) throw new Error('Error decoding')
-            const az: any = body.az
-            if(!isFinite(az)) throw new Error('Error decoding')
-
-            const gx: any = body.gx
-            if(!isFinite(gx)) throw new Error('Error decoding')
-            const gy: any = body.gy
-            if(!isFinite(gy)) throw new Error('Error decoding')
-            const gz: any = body.gz
-            if(!isFinite(gz)) throw new Error('Error decoding')
-
-            const mx: any = body.mx
-            if(!isFinite(mx)) throw new Error('Error decoding')
-            const my: any = body.my
-            if(!isFinite(my)) throw new Error('Error decoding')
-            const mz: any = body.mz
-            if(!isFinite(mz)) throw new Error('Error decoding')
-
-            insertUpdate.run({
-                $timestamp:         timestamp,
-                $gpsValid:          gpsValid ? 1 : 0,
-                $gpsFix:            gpsFix,
-                $latitude:          latitude,
-                $longitude:         longitude,
-                $altitude:          altitude,
-                $temperature0Valid: temperature0Valid ? 1 : 0,
-                $temperature0:      temperature0,
-                $temperature1Valid: temperature1Valid ? 1 : 0,
-                $temperature1:      temperature1,
-                $temperature2Valid: temperature2Valid ? 1 : 0,
-                $temperature2:      temperature2,
-                $temperature3Valid: temperature3Valid ? 1 : 0,
-                $temperature3:      temperature3,
-                $baroValid:         baroValid ? 1 : 0,
-                $pressure:          pressure,
-                $humidity:          humidity,
-                $imuValid:          imuValid ? 1 : 0,
-                $ax: ax, $ay: ay, $az: az,
-                $gx: gx, $gy: gy, $gz: gz,
-                $mx: mx, $my: my, $mz: mz,
+            return new Response(JSON.stringify(row), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
             });
+        },
+        POST: async req => {
+            try { 
+                const body: any = await req.json();
 
-            console.log('Saved update!')
-            console.log(body)
+                if(typeof body !== 'object') throw new Error('Error decoding')
 
-            return new Response("Updated!", { status: 201 });
-        } catch {}
+                const timestamp: any = body.timestamp
+                if(!isFinite(timestamp)) throw new Error('Error decoding')
 
-        return new Response("Error handling update", { status: 500 });
-      },
+                const gpsValid: any = body.gpsValid
+                if(typeof gpsValid !== 'boolean') throw new Error('Error decoding')
+
+                const gpsFix: any = body.gpsFix
+                if(!isFinite(gpsFix)) throw new Error('Error decoding')
+
+                const latitude: any = body.latitude
+                if(!isFinite(latitude)) throw new Error('Error decoding')
+
+                const longitude: any = body.longitude
+                if(!isFinite(longitude)) throw new Error('Error decoding')
+
+                const altitude: any = body.altitude
+                if(!isFinite(altitude)) throw new Error('Error decoding')
+
+                const temperature0Valid: any = body.temperature0Valid
+                if(typeof temperature0Valid !== 'boolean') throw new Error('Error decoding')
+
+                const temperature0: any = body.temperature0
+                if(!isFinite(temperature0)) throw new Error('Error decoding')
+
+                const temperature1Valid: any = body.temperature1Valid
+                if(typeof temperature1Valid !== 'boolean') throw new Error('Error decoding')
+
+                const temperature1: any = body.temperature1
+                if(!isFinite(temperature1)) throw new Error('Error decoding')
+
+                const temperature2Valid: any = body.temperature2Valid
+                if(typeof temperature2Valid !== 'boolean') throw new Error('Error decoding')
+
+                const temperature2: any = body.temperature2
+                if(!isFinite(temperature2)) throw new Error('Error decoding')
+
+                const temperature3Valid: any = body.temperature3Valid
+                if(typeof temperature3Valid !== 'boolean') throw new Error('Error decoding')
+
+                const temperature3: any = body.temperature3
+                if(!isFinite(temperature3)) throw new Error('Error decoding')
+
+                const baroValid: any = body.baroValid
+                if(typeof baroValid !== 'boolean') throw new Error('Error decoding')
+
+                const pressure: any = body.pressure
+                if(!isFinite(pressure)) throw new Error('Error decoding')
+
+                const humidity: any = body.humidity
+                if(!isFinite(humidity)) throw new Error('Error decoding')
+
+                const imuValid: any = body.imuValid
+                if(typeof imuValid !== 'boolean') throw new Error('Error decoding')
+
+                const ax: any = body.ax
+                if(!isFinite(ax)) throw new Error('Error decoding')
+                const ay: any = body.ay
+                if(!isFinite(ay)) throw new Error('Error decoding')
+                const az: any = body.az
+                if(!isFinite(az)) throw new Error('Error decoding')
+
+                const gx: any = body.gx
+                if(!isFinite(gx)) throw new Error('Error decoding')
+                const gy: any = body.gy
+                if(!isFinite(gy)) throw new Error('Error decoding')
+                const gz: any = body.gz
+                if(!isFinite(gz)) throw new Error('Error decoding')
+
+                const mx: any = body.mx
+                if(!isFinite(mx)) throw new Error('Error decoding')
+                const my: any = body.my
+                if(!isFinite(my)) throw new Error('Error decoding')
+                const mz: any = body.mz
+                if(!isFinite(mz)) throw new Error('Error decoding')
+
+                insertUpdate.run({
+                    $timestamp:         timestamp,
+                    $gpsValid:          gpsValid ? 1 : 0,
+                    $gpsFix:            gpsFix,
+                    $latitude:          latitude,
+                    $longitude:         longitude,
+                    $altitude:          altitude,
+                    $temperature0Valid: temperature0Valid ? 1 : 0,
+                    $temperature0:      temperature0,
+                    $temperature1Valid: temperature1Valid ? 1 : 0,
+                    $temperature1:      temperature1,
+                    $temperature2Valid: temperature2Valid ? 1 : 0,
+                    $temperature2:      temperature2,
+                    $temperature3Valid: temperature3Valid ? 1 : 0,
+                    $temperature3:      temperature3,
+                    $baroValid:         baroValid ? 1 : 0,
+                    $pressure:          pressure,
+                    $humidity:          humidity,
+                    $imuValid:          imuValid ? 1 : 0,
+                    $ax: ax, $ay: ay, $az: az,
+                    $gx: gx, $gy: gy, $gz: gz,
+                    $mx: mx, $my: my, $mz: mz,
+                });
+
+                console.log('Saved update!')
+                console.log(body)
+
+                return new Response("Updated!", { status: 201 });
+            } catch {}
+
+            return new Response("Error handling update", { status: 500 });
+        },
+        },
     },
-  },
-  
-  fetch(req) {
-    return new Response("Not Found", { status: 404 });
-  },
+
+    fetch(req) {
+        return new Response("Not Found", { status: 404 });
+    },
 });
 
 console.log(`Server running at ${server.url}`);
