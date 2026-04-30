@@ -65,7 +65,7 @@ const getLatestUpdate = db.prepare(`
 `);
 
 const server = Bun.serve({
-    port: 3000,
+    port: 8080,
 
     routes: {
         "/api/status": new Response("OK"),
