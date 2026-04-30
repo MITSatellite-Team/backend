@@ -64,12 +64,19 @@ const getLatestUpdate = db.prepare(`
   SELECT * FROM updates ORDER BY id DESC LIMIT 1
 `);
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 const server = Bun.serve({
     port: 8080,
 
     routes: {
-        "/api/status": new Response("OK"),
+        "/api/status": new Response("OK", { headers: CORS_HEADERS }),
         "/api/update": {
+        OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
         GET: () => {
             const row: any = getLatestUpdate.get();
 
@@ -85,7 +92,7 @@ const server = Bun.serve({
 
             return new Response(JSON.stringify(row), {
                 status: 200,
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", ...CORS_HEADERS },
             });
         },
         POST: async req => {
@@ -196,18 +203,18 @@ const server = Bun.serve({
                 // console.log('Saved update!')
                 // console.log(body)
 
-                return new Response("Updated!", { status: 201 });
+                return new Response("Updated!", { status: 201, headers: CORS_HEADERS });
             } catch(error) {
                 // console.warn(error)
             }
 
-            return new Response("Error handling update", { status: 500 });
+            return new Response("Error handling update", { status: 500, headers: CORS_HEADERS });
         },
         },
     },
 
     fetch(req) {
-        return new Response("Not Found", { status: 404 });
+        return new Response("Not Found", { status: 404, headers: CORS_HEADERS });
     },
 });
 
