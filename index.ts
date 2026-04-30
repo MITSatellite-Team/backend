@@ -7,6 +7,7 @@ db.run(`
     timestamp         REAL    NOT NULL,
 
     gpsValid          INTEGER NOT NULL,
+    gpsFix            INTEGER NOT NULL,
     latitude          REAL    NOT NULL,
     longitude         REAL    NOT NULL,
     altitude          REAL    NOT NULL,
@@ -34,7 +35,7 @@ db.run(`
 const insertUpdate = db.prepare(`
   INSERT INTO updates (
     timestamp,
-    gpsValid, latitude, longitude, altitude,
+    gpsValid, gpsFix, latitude, longitude, altitude,
     temperature0Valid, temperature0,
     temperature1Valid, temperature1,
     temperature2Valid, temperature2,
@@ -46,7 +47,7 @@ const insertUpdate = db.prepare(`
     mx, my, mz
   ) VALUES (
     $timestamp,
-    $gpsValid, $latitude, $longitude, $altitude,
+    $gpsValid, $gpsFix, $latitude, $longitude, $altitude,
     $temperature0Valid, $temperature0,
     $temperature1Valid, $temperature1,
     $temperature2Valid, $temperature2,
@@ -67,7 +68,24 @@ const server = Bun.serve({
   routes: {
     "/api/status": new Response("OK"),
     "/api/update": {
-      GET: () => new Response("Update"),
+      GET: () => {
+        const row: any = getLatestUpdate.get();
+
+        if (!row) return new Response("No data yet", { status: 404 });
+
+        row.temperature0Valid = row.temperature0Valid === 1
+        row.temperature1Valid = row.temperature1Valid === 1
+        row.temperature2Valid = row.temperature2Valid === 1
+        row.temperature3Valid = row.temperature3Valid === 1
+        row.baroValid = row.baroValid === 1
+        row.imuValid = row.imuValid === 1
+        row.gpsValid = row.gpsValid === 1
+
+        return new Response(JSON.stringify(row), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+        });
+      },
       POST: async req => {
         try { 
             const body: any = await req.json();
@@ -79,6 +97,9 @@ const server = Bun.serve({
 
             const gpsValid: any = body.gpsValid
             if(typeof gpsValid !== 'boolean') throw new Error('Error decoding')
+
+            const gpsFix: any = body.gpsFix
+            if(!isFinite(gpsFix)) throw new Error('Error decoding')
 
             const latitude: any = body.latitude
             if(!isFinite(latitude)) throw new Error('Error decoding')
@@ -149,6 +170,7 @@ const server = Bun.serve({
             insertUpdate.run({
                 $timestamp:         timestamp,
                 $gpsValid:          gpsValid ? 1 : 0,
+                $gpsFix:            gpsFix,
                 $latitude:          latitude,
                 $longitude:         longitude,
                 $altitude:          altitude,
@@ -168,6 +190,9 @@ const server = Bun.serve({
                 $gx: gx, $gy: gy, $gz: gz,
                 $mx: mx, $my: my, $mz: mz,
             });
+
+            console.log('Saved update!')
+            console.log(body)
 
             return new Response("Updated!", { status: 201 });
         } catch {}
