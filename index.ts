@@ -193,12 +193,12 @@ const server = Bun.serve({
                     $mx: mx, $my: my, $mz: mz,
                 });
 
-                console.log('Saved update!')
-                console.log(body)
+                // console.log('Saved update!')
+                // console.log(body)
 
                 return new Response("Updated!", { status: 201 });
             } catch(error) {
-                console.warn(error)
+                // console.warn(error)
             }
 
             return new Response("Error handling update", { status: 500 });
