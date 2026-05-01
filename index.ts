@@ -99,13 +99,9 @@ const server = Bun.serve({
             try { 
                 const body: any = await req.json();
 
-                console.log(body)
-
                 if(typeof body !== 'object') throw new Error('Error decoding')
 
                 const timestamp: any = body.timestamp
-                console.log(timestamp)
-                console.log(isFinite(timestamp))
                 if(!isFinite(timestamp)) throw new Error('Error decoding')
 
                 const gpsValid: any = body.gpsValid
@@ -209,7 +205,7 @@ const server = Bun.serve({
 
                 return new Response("Updated!", { status: 201, headers: CORS_HEADERS });
             } catch(error) {
-                console.warn(error)
+                // console.warn(error)
             }
 
             return new Response("Error handling update", { status: 500, headers: CORS_HEADERS });
