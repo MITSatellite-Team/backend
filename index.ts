@@ -205,7 +205,7 @@ const server = Bun.serve({
 
                 return new Response("Updated!", { status: 201, headers: CORS_HEADERS });
             } catch(error) {
-                // console.warn(error)
+                console.warn(error)
             }
 
             return new Response("Error handling update", { status: 500, headers: CORS_HEADERS });
