@@ -104,6 +104,8 @@ const server = Bun.serve({
                 if(typeof body !== 'object') throw new Error('Error decoding')
 
                 const timestamp: any = body.timestamp
+                console.log(timestamp)
+                console.log(isFinite(timestamp))
                 if(!isFinite(timestamp)) throw new Error('Error decoding')
 
                 const gpsValid: any = body.gpsValid
