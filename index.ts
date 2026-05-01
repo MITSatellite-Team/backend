@@ -99,6 +99,8 @@ const server = Bun.serve({
             try { 
                 const body: any = await req.json();
 
+                console.log(body)
+
                 if(typeof body !== 'object') throw new Error('Error decoding')
 
                 const timestamp: any = body.timestamp
