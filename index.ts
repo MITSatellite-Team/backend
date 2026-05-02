@@ -75,7 +75,10 @@ const CORS_HEADERS = {
 
 const server = Bun.serve({
     port: 8080,
-
+    tls: {
+        key: Bun.file("/etc/letsencrypt/live/leonird.liamh.space/privkey.pem"),
+        cert: Bun.file("/etc/letsencrypt/live/leonird.liamh.space/fullchain.pem"),
+    },
     routes: {
         "/api/status": new Response("OK", { headers: CORS_HEADERS }),
         "/api/update": {
