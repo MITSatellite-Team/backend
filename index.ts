@@ -5,6 +5,7 @@ db.run(`
   CREATE TABLE IF NOT EXISTS updates (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp         REAL    NOT NULL,
+    beacon            TEXT    NOT NULL,
 
     gpsValid          INTEGER NOT NULL,
     gpsFix            INTEGER NOT NULL,
@@ -35,6 +36,7 @@ db.run(`
 const insertUpdate = db.prepare(`
   INSERT INTO updates (
     timestamp,
+    beacon,
     gpsValid, gpsFix, latitude, longitude, altitude,
     temperature0Valid, temperature0,
     temperature1Valid, temperature1,
@@ -47,6 +49,7 @@ const insertUpdate = db.prepare(`
     mx, my, mz
   ) VALUES (
     $timestamp,
+    $beacon,
     $gpsValid, $gpsFix, $latitude, $longitude, $altitude,
     $temperature0Valid, $temperature0,
     $temperature1Valid, $temperature1,
@@ -103,6 +106,10 @@ const server = Bun.serve({
 
                 const timestamp: any = body.timestamp
                 if(!isFinite(timestamp)) throw new Error('Error decoding')
+
+                const beacon: any = body.beacon
+                if(!beacon) throw new Error('Error decoding')
+                if(typeof beacon !== 'string') throw new Error('Error decoding')
 
                 const gpsValid: any = body.gpsValid
                 if(typeof gpsValid !== 'boolean') throw new Error('Error decoding')
@@ -178,6 +185,7 @@ const server = Bun.serve({
 
                 insertUpdate.run({
                     $timestamp:         timestamp,
+                    $beacon:            beacon,
                     $gpsValid:          gpsValid ? 1 : 0,
                     $gpsFix:            gpsFix,
                     $latitude:          latitude,
