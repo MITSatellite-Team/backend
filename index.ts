@@ -67,6 +67,10 @@ const getLatestUpdate = db.prepare(`
   SELECT * FROM updates ORDER BY id DESC LIMIT 1
 `);
 
+const getAllUpdates = db.prepare(`
+  SELECT * FROM updates ORDER BY timestamp ASC
+`)
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -81,12 +85,22 @@ const server = Bun.serve({
     // },
     routes: {
         "/api/status": new Response("OK", { headers: CORS_HEADERS }),
+		'/api/path': {
+			GET: () => {
+				const update = (getAllUpdates.all() as any[]).map(item => ({ latitude: item.latitude / 100000, longitude: item.longitude / 100000, altitude: item.altitude }))
+
+				return new Response(JSON.stringify(update), {
+					status: 200,
+					headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+				});
+			}
+		},
         "/api/update": {
         OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
         GET: () => {
             const row: any = getLatestUpdate.get();
 
-            if (!row) return new Response("No data yet", { status: 404 });
+            if (!row) return new Response("No data yet", { status: 425, headers: CORS_HEADERS });
 
             row.temperature0Valid = row.temperature0Valid === 1
             row.temperature1Valid = row.temperature1Valid === 1
