@@ -77,7 +77,8 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-let currentCommand: string | null = null
+let currentCommand: Uint8Array | null = null
+let commandId = 0
 
 const server = Bun.serve({
     port: 8080,
@@ -104,7 +105,7 @@ const server = Bun.serve({
 
 				return new Response(currentCommand, {
 					status: 200,
-					headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+					headers: { "Content-Type": "application/octet-stream", ...CORS_HEADERS },
 				});
 			},
             POST: async req => {
@@ -112,8 +113,17 @@ const server = Bun.serve({
 
                 try {
                     const parsedCommand = JSON.parse(command)
-                    parsedCommand.id = crypto.randomUUID()
-                    currentCommand = JSON.stringify(parsedCommand)
+
+                    if(parsedCommand.type === 'TAKE_IMAGE') {
+                        currentCommand = new Uint8Array([0, commandId])
+
+                        commandId = (commandId + 1) % 256
+                    } else {
+                        currentCommand = null
+                    }
+
+                    // parsedCommand.id = crypto.randomUUID()
+                    // currentCommand = JSON.stringify(parsedCommand)
                 } catch {}
 
                 return new Response("Set command!", { status: 201, headers: CORS_HEADERS })
