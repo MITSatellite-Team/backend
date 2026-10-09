@@ -99,6 +99,7 @@ const server = Bun.serve({
 			GET: () => {
 				return new Response(JSON.stringify({
                     'command': 'NONE',
+                    'id': '0',
                 }), {
 					status: 200,
 					headers: { "Content-Type": "application/json", ...CORS_HEADERS },
