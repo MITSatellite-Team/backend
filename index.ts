@@ -95,6 +95,16 @@ const server = Bun.serve({
 				});
 			}
 		},
+        '/api/command': {
+			GET: () => {
+				return new Response(JSON.stringify({
+                    'command': 'NONE',
+                }), {
+					status: 200,
+					headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+				});
+			}
+		},
         "/api/update": {
         OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
         GET: () => {
