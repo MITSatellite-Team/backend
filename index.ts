@@ -77,6 +77,8 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+let currentCommand: string | null = null
+
 const server = Bun.serve({
     port: 8080,
     // tls: {
@@ -96,15 +98,44 @@ const server = Bun.serve({
 			}
 		},
         '/api/command': {
+            OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
 			GET: () => {
-				return new Response(JSON.stringify({
-                    'command': 'NONE',
-                    'id': '0',
-                }), {
+                if (!currentCommand) return new Response("No command yet", { status: 425, headers: CORS_HEADERS });
+
+				return new Response(currentCommand, {
 					status: 200,
 					headers: { "Content-Type": "application/json", ...CORS_HEADERS },
 				});
-			}
+			},
+            POST: async req => {
+                const command: string = await req.text()
+
+                try {
+                    const parsedCommand = JSON.parse(command)
+                    parsedCommand.id = crypto.randomUUID()
+                    currentCommand = JSON.stringify(parsedCommand)
+                } catch {}
+
+                return new Response("Set command!", { status: 201, headers: CORS_HEADERS })
+            },
+		},
+        '/api/response': {
+            OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
+			// GET: () => {
+            //     if (!currentCommand) return new Response("No command yet", { status: 425, headers: CORS_HEADERS })
+
+			// 	return new Response(currentCommand, {
+			// 		status: 200,
+			// 		headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+			// 	})
+			// },
+            POST: async req => {
+                const response: string = await req.text()
+
+                console.log(response)
+
+                return new Response("Received response!", { status: 201, headers: CORS_HEADERS })
+            },
 		},
         "/api/update": {
         OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
