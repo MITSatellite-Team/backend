@@ -1,6 +1,6 @@
-import { Database } from "bun:sqlite";
+import { Database } from "bun:sqlite"
 
-const db = new Database("data.db");
+const db = new Database("data.db")
 db.run(`
   CREATE TABLE IF NOT EXISTS updates (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +31,7 @@ db.run(`
     gx REAL NOT NULL, gy REAL NOT NULL, gz REAL NOT NULL,
     mx REAL NOT NULL, my REAL NOT NULL, mz REAL NOT NULL
   )
-`);
+`)
 
 const insertUpdate = db.prepare(`
   INSERT INTO updates (
@@ -61,24 +61,60 @@ const insertUpdate = db.prepare(`
     $gx, $gy, $gz,
     $mx, $my, $mz
   )
-`);
+`)
 
 const getLatestUpdate = db.prepare(`
   SELECT * FROM updates ORDER BY id DESC LIMIT 1
-`);
+`)
 
 const getAllUpdates = db.prepare(`
   SELECT * FROM updates ORDER BY timestamp ASC
+`)
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS commands (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp REAL    NOT NULL,
+    command   BLOB    NOT NULL,
+    commandId INTEGER NOT NULL UNIQUE,
+    response  BLOB
+  )
+`)
+
+const insertCommand = db.prepare(`
+  INSERT INTO commands (timestamp, command, commandId)
+  VALUES ($timestamp, $command, $commandId)
+  RETURNING id
+`)
+
+const getNextCommandId = db.prepare(`
+  SELECT COALESCE(MAX(commandId), -1) + 1 AS nextId FROM commands
+`)
+
+const getNextCommand = db.prepare(`
+  SELECT * FROM commands
+  WHERE response IS NULL
+  ORDER BY id ASC
+  LIMIT 1
+`)
+
+const setCommandResponse = db.prepare(`
+  UPDATE commands SET response = $response WHERE commandId = $commandId
+`)
+
+// const getCommand = db.prepare(`
+//   SELECT * FROM commands WHERE commandId = $commandId
+// `)
+
+const getAllCommands = db.prepare(`
+  SELECT * FROM commands ORDER BY id ASC
 `)
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
-};
-
-let currentCommand: Uint8Array | null = null
-let commandId = 0
+}
 
 const server = Bun.serve({
     port: 8080,
@@ -94,57 +130,85 @@ const server = Bun.serve({
 
 				return new Response(JSON.stringify(update), {
 					status: 200,
-					headers: { "Content-Type": "application/json", ...CORS_HEADERS },
-				});
+					headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+				})
 			}
 		},
         '/api/command': {
             OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
 			GET: () => {
-                if (!currentCommand) return new Response("No command yet", { status: 425, headers: CORS_HEADERS });
+                const nextCommand = getNextCommand.get() as {
+                    id: number
+                    timestamp: number
+                    command: Uint8Array
+                    commandId: number
+                    response: null
+                } | null
 
-				return new Response(currentCommand, {
+                if (!nextCommand) return new Response('No command yet', { status: 425, headers: CORS_HEADERS });
+
+				return new Response(nextCommand.command, {
 					status: 200,
-					headers: { "Content-Type": "application/octet-stream", ...CORS_HEADERS },
-				});
+					headers: { 'Content-Type': 'application/octet-stream', ...CORS_HEADERS },
+				})
 			},
             POST: async req => {
-                const command: string = await req.text()
-
                 try {
+                    const command: string = await req.text()
+
                     const parsedCommand = JSON.parse(command)
 
-                    if(parsedCommand.type === 'TAKE_IMAGE') {
-                        currentCommand = new Uint8Array([0, commandId])
+                    const nextId: number = (getNextCommandId.get() as any).nextId;
 
-                        commandId = (commandId + 1) % 256
-                    } else {
-                        currentCommand = null
+                    console.log(`Command ${command} id ${nextId}`)
+
+                    if(parsedCommand.type === 'TAKE_IMAGE') {
+                        const bytes = new Uint8Array([0, nextId])
+
+                        insertCommand.run({
+                            $timestamp: Date.now(),
+                            $command: bytes,
+                            $commandId: nextId
+                        })
                     }
 
-                    // parsedCommand.id = crypto.randomUUID()
-                    // currentCommand = JSON.stringify(parsedCommand)
+                    return new Response('Set command!', { status: 201, headers: CORS_HEADERS })
                 } catch {}
-
-                return new Response("Set command!", { status: 201, headers: CORS_HEADERS })
+                
+                return new Response('500 Internal Server Error', { status: 500, headers: CORS_HEADERS })
             },
 		},
+        '/api/commands': {
+			GET: () => {
+                const commands = getAllCommands.get() as any[]
+
+				return new Response(JSON.stringify(commands), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+				})
+			},
+        },
         '/api/response': {
             OPTIONS: () => new Response(null, { status: 204, headers: CORS_HEADERS }),
-			// GET: () => {
-            //     if (!currentCommand) return new Response("No command yet", { status: 425, headers: CORS_HEADERS })
-
-			// 	return new Response(currentCommand, {
-			// 		status: 200,
-			// 		headers: { "Content-Type": "application/json", ...CORS_HEADERS },
-			// 	})
-			// },
             POST: async req => {
-                const response: string = await req.text()
+                try {
+                    const buffer = new Uint8Array(await req.arrayBuffer())
+                
+                    if(buffer.length !== 256) return new Response('500 Internal Server Error', { status: 500, headers: CORS_HEADERS })
 
-                console.log(response)
+                    console.log(buffer)
 
-                return new Response("Received response!", { status: 201, headers: CORS_HEADERS })
+                    const id = buffer[1]!
+
+                    setCommandResponse.run({
+                        $commandId: id,
+                        $response: buffer,
+                    })
+
+                    return new Response("Received response!", { status: 201, headers: CORS_HEADERS })
+                } catch{}
+
+                return new Response('500 Internal Server Error', { status: 500, headers: CORS_HEADERS })
             },
 		},
         "/api/update": {
