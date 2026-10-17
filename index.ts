@@ -147,6 +147,8 @@ const server = Bun.serve({
 
                 if (!nextCommand) return new Response('No command yet', { status: 425, headers: CORS_HEADERS });
 
+                console.log(`Fetched command: ${nextCommand.command}`)
+
 				return new Response(nextCommand.command, {
 					status: 200,
 					headers: { 'Content-Type': 'application/octet-stream', ...CORS_HEADERS },
@@ -196,9 +198,9 @@ const server = Bun.serve({
                 
                     if(buffer.length !== 256) return new Response('500 Internal Server Error', { status: 500, headers: CORS_HEADERS })
 
-                    console.log(buffer)
-
                     const id = buffer[1]!
+                    
+                    console.log(`Response ${buffer} id ${id}`)
 
                     setCommandResponse.run({
                         $commandId: id,
