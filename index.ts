@@ -147,7 +147,7 @@ const server = Bun.serve({
 
                 if (!nextCommand) return new Response('No command yet', { status: 425, headers: CORS_HEADERS });
 
-                console.log(`Fetched command: ${nextCommand.command}`)
+                // console.log(`Fetched command: ${nextCommand.command}`)
 
 				return new Response(nextCommand.command, {
 					status: 200,
