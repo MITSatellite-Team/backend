@@ -190,7 +190,7 @@ const server = Bun.serve({
 		},
         '/api/commands': {
 			GET: () => {
-                const commands = getAllCommands.get() as any[]
+                const commands = getAllCommands.all() as any[]
 
 				return new Response(JSON.stringify(commands), {
 					status: 200,
