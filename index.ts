@@ -172,6 +172,14 @@ const server = Bun.serve({
                             $command: bytes,
                             $commandId: nextId
                         })
+                    } else if(parsedCommand.type === 'DOWNLOAD_IMAGE') {
+                        const bytes = new Uint8Array([1, nextId, parsedCommand.start >> 8 % 256, parsedCommand.start % 256])
+
+                        insertCommand.run({
+                            $timestamp: Date.now(),
+                            $command: bytes,
+                            $commandId: nextId
+                        })
                     }
 
                     return new Response('Set command!', { status: 201, headers: CORS_HEADERS })
