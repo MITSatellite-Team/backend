@@ -198,7 +198,7 @@ const server = Bun.serve({
                 
                     if(buffer.length !== 256) return new Response('500 Internal Server Error', { status: 500, headers: CORS_HEADERS })
 
-                    const id = buffer[1]!
+                    const id = buffer[2]!
                     
                     console.log(`Response ${buffer} id ${id}`)
 
