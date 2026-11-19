@@ -185,7 +185,9 @@ const server = Bun.serve({
                     }
 
                     return new Response('Set command!', { status: 201, headers: CORS_HEADERS })
-                } catch {}
+                } catch(error) {
+                    console.log(error)
+                }
                 
                 return new Response('500 Internal Server Error', { status: 500, headers: CORS_HEADERS })
             },
