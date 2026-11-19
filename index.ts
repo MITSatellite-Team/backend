@@ -88,10 +88,9 @@ const insertCommand = db.prepare(`
 `)
 
 const getNextCommandId = db.prepare(`
-  SELECT COALESCE(
-    (SELECT commandId FROM commands ORDER BY id DESC LIMIT 1),
-    -1
-  ) + 1 AS nextId
+  SELECT * FROM commands
+  ORDER BY id DESC
+  LIMIT 1
 `)
 
 const getNextCommand = db.prepare(`
@@ -163,7 +162,7 @@ const server = Bun.serve({
 
                     const parsedCommand = JSON.parse(command)
 
-                    const nextId: number = (getNextCommandId.get() as any).nextId % 256;
+                    const nextId: number = (((getNextCommandId.get() as any).commandId ?? -1) + 1).nextId % 256;
 
                     console.log(`Command ${command} id ${nextId}`)
 
