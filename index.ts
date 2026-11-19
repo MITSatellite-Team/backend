@@ -76,7 +76,7 @@ db.run(`
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp REAL    NOT NULL,
     command   BLOB    NOT NULL,
-    commandId INTEGER NOT NULL UNIQUE,
+    commandId INTEGER NOT NULL,
     response  BLOB
   )
 `)
