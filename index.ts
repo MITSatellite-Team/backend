@@ -162,7 +162,7 @@ const server = Bun.serve({
 
                     const parsedCommand = JSON.parse(command)
 
-                    const nextId: number = (((getNextCommandId.get() as any).commandId ?? -1) + 1).nextId % 256;
+                    const nextId: number = (((getNextCommandId.get() as any ?? {}).commandId ?? -1) + 1).nextId % 256;
 
                     console.log(`Command ${command} id ${nextId}`)
 
